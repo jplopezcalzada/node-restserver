@@ -4,12 +4,13 @@ const _ = require('underscore');
 
 
 const Usuario = require('../models/usuario');
+const { verificarToken, verificaAdmin_Role } = require('../middelwares/autenticacion');
 
 const app = express();
 
 
 
-app.get('/usuario', function(req, res) {
+app.get('/usuario', verificarToken, (req, res) => {
 
     const desde = Number(req.query.desde) || 0;
     const limite = Number(req.query.limite) || 5;
@@ -36,7 +37,7 @@ app.get('/usuario', function(req, res) {
         });
 
 });
-app.post('/usuario', function(req, res) {
+app.post('/usuario', [verificarToken, verificaAdmin_Role], (req, res) => {
     const body = req.body;
 
     const usuario = new Usuario({
@@ -61,7 +62,7 @@ app.post('/usuario', function(req, res) {
 
 
 });
-app.put('/usuario/:id', function(req, res) {
+app.put('/usuario/:id', [verificarToken, verificaAdmin_Role], (req, res) => {
     const id = req.params.id;
     const body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']);
 
@@ -80,7 +81,7 @@ app.put('/usuario/:id', function(req, res) {
     });
 
 });
-app.delete('/usuario/:id', function(req, res) {
+app.delete('/usuario/:id', [verificarToken, verificaAdmin_Role], (req, res) => {
     const id = req.params.id;
     // cambiando el estado
     const cambioEstado = {
@@ -89,10 +90,10 @@ app.delete('/usuario/:id', function(req, res) {
     // Eliminado fisicamente
     // Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
     // Eliminado cambiando el estado
-    Usuario.findByIdAndUpdate(id, cambioEstad, { new: true }, (err, usuarioBorrado) => {
+    Usuario.findByIdAndUpdate(id, cambioEstado, { new: true }, (err, usuarioBorrado) => {
 
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 ok: false,
                 err
             });
